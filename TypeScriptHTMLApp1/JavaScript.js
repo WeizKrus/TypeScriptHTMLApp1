@@ -249,98 +249,6 @@ $(function () {
             };
         }()),
 
-        ctrl = (function (event) {
-            var ctrlObjFactory = new CtrlObjectFactory();
-            var ctrlObjFactory2 = new CtrlObjectFactory2();
-            var moverCtrlObjFactory = new CtrlObjectFactory2('mover');
-
-            moverCtrlObjFactory.createMoverCtrlObject({ name: '' });
-
-            ctrlObjFactory2.createCtrlObject({
-                name: 'FF',
-                hasDefaultToggleControlMethod: false,
-                toggleControl: $().ntTools.toggleControl,
-                event: {
-                    click: function () {  }
-                },
-                members: (function () {
-                    return {
-                        noOfItems: 1,
-                        baseIndex: 0,
-                        name: 'FF_'
-                    };
-                }())
-            });
-
-            var O = {
-                CTRLA: ctrlObjFactory2.createCtrlObject({
-                    name: '',
-                    event: { click: function () { } },
-                    hasDefaultToggleControlMethod: false,
-                    members: {},
-                }),
-                CTRLB: ctrlObjFactory2.createCtrlObject({
-                    type: 'radio',
-                    name: 'mvr',
-                    members: $().ntTools.createMemberNameArray(0,0, 'abc'),
-                    hasDefaultToggleControlMethod: true,
-                    event: {
-                        click: function () { },
-                        change: function () { }
-                    }
-                })
-            };
-
-            return {
-                LREDIRECTOT: ctrlObjFactory.createCtrlObject('checkbox', 'LREDIRECTOT', false, false, {
-                    click: event.onLREDIRECTOTClick
-                }),
-                NREDIRECTOTFREQ: ctrlObjFactory.createCtrlObject('dropdown', 'NREDIRECTOTFREQ', true, false),
-                LREDIRECTOTEDIT: ctrlObjFactory.createCtrlObject('checkbox', 'LREDIRECTOTEDIT', true, false),
-                CREDIRECTOTPC: ctrlObjFactory.createCtrlObject('mover', 'CREDIRECTOTPC', true, true),
-                CREDIRECTOTPCIDENT: ctrlObjFactory.createCtrlObject('mover', 'CREDIRECTOTPCIDENT', true, true),
-                NREDIRECTOTMETH: ctrlObjFactory
-                    .createCtrlObject('radio', 'NREDIRECTOTMETH', true, true, {
-                        click: event.onNREDIRECTOTMETHClick
-                    })
-                    .createMemberNameArray(1, 0, 'NREDIRECTOTMETH_'),
-                NREDIRECTOTPC: ctrlObjFactory
-                    .createCtrlObject('dropdown', 'NREDIRECTOTPC', true, false, {
-                        change: event.onNREDIRECTOTPCChange
-                    }),
-                CREDIRECTOTREF: ctrlObjFactory
-                    .createCtrlObject('textbox', 'CREDIRECTOTREF', true, false, {
-                        change: event.onCREDIRECTOTREFChange
-                    }),
-                NREDIRECTOTGRPMETH: ctrlObjFactory
-                    .createCtrlObject('radio', 'NREDIRECTOTGRPMETH', true, true, {
-                        click: event.onNREDIRECTOTGRPMETHClick
-                    })
-                    .createMemberNameArray(2, 0, 'NREDIRECTOTGRPMETH_'),
-                NREDIRECTOTGRPLVL: ctrlObjFactory
-                    .createCtrlObject('dropdown', 'NREDIRECTOTGRPLVL', true, false, {
-                        change: event.onNREDIRECTOTGRPLVLChange
-                    }),
-                NREDIRECTOTG: ctrlObjFactory
-                    .createCtrlObject('dropdown', 'NREDIRECTOTG', true, true, {
-                        change: event.onNREDIRECTOTGChange
-                    })
-                    .createMemberNameArray(20, 1),
-                CREDIRECTOTGVAL: ctrlObjFactory
-                    .createCtrlObject('dropdown', 'CREDIRECTOTGVAL', true, true)
-                    .createMemberNameArray(20, 1),
-                CREDIRECTOTDUMMYGVAL: ctrlObjFactory
-                    .createCtrlObject('dropdown', 'CREDIRECTOTDUMMYGVAL', true, true)
-                    .createMemberNameArray(20, 1),
-                NREDIRECTOTPOLMETH: ctrlObjFactory
-                    .createCtrlObject('radio', 'NREDIRECTOTPOLMETH', true, true)
-                    .createMemberNameArray(2, 0, 'NREDIRECTOTPOLMETH_'),
-                BtnSave: ctrlObjFactory.createCtrlObject('button', 'BtnSave', false, false, {
-                    click: event.onBtnSaveClick
-                })
-            };
-        }()),
-
         ctrl = (function () {
             return {
                 LREDIRECTOT: {
@@ -555,41 +463,108 @@ htmlFormCtrlFactory.createControl({
 var CtrlObjectFactory = function () {
     'use strict';
 
-    return {
-        createCtrlObject: function (ctrlType, name, hasToggleControl, hasMember, eventObject) {
+    var
+        registeredCtrls = {},
+        methods = {},
+
+        registerCtrlObjects = function (ctrlObjectArray) {
+            var i = 0, len = ctrlObjectArray.length;
+
+            for (; i < len; i += 1) {
+                registerCtrlObject(ctrlObjectArray[i]);
+            }
+
+            return this;
+        },
+
+        registerCtrlObject = function (ctrlObject) {
+            registeredCtrls[ctrlObject.name] = ctrlObject;
+
+            return this;
+        },
+
+        createCtrlObjects = function () {
+            var ctrl = {}, ctrlName = '';
+
+            for (ctrlName in registeredCtrls) {
+                ctrl = registeredCtrls[ctrlName];
+                registeredCtrls[ctrlName] = ctrl.type !== 'mover' ?
+                    createCtrlObject(ctrl) : createMoverCtrlObject(ctrl);
+            }
+
+            return registeredCtrls;
+        },
+
+        createCtrlObject = function (options) {
             var obj = {};
 
-            obj.name = name;
-            obj.$this = $('#' + ctrlType);
-
-            if (eventObject) {
-                obj.event = eventObject;
+            if (options.name) {
+                obj.name = options.name;
             }
 
-            if (hasToggleControl) {
-                switch (ctrlType) {
-                    case 'mover':
-                        obj.toggleControl = $().ntTools.toggleMoverControl;
-                        break;
-                    default:
-                        obj.toggleControl = $().ntTools.toggleControl;
+            if (options.type) {
+                obj.type = options.type;
+            }
+
+            if (options.toggleControl) {
+                obj.toggleControl = options.toggleControl;
+            } else {
+                if (!options.noDefaultToggleControl) {
+                    obj.toggleControl = $().ntTools.toggleControl;
                 }
             }
 
-            if (hasMember) {
-                switch (ctrlType) {
-                    case 'mover':
-                        obj.members = $().ntTools.createMoverMember(name);
-                        break;
-                    default:
-                        obj.createMemberNameArray = $().ntTools.createMemberNameArray;
-                        obj.members = [];
-                }
+            if (options.members) {
+                obj.members = options.members;
+                options.members = $.map(options.members, function (el) {
+                    return '#' + el;
+                });
+                obj.$ = $(options.members.join(','));
+            } else {
+                obj.$ = $('#' + options.name);
             }
+
+            if (options.event) {
+                obj.event = options.event;
+            }
+
+            obj.showHideCtrl = $().ntTools.showHideCtrl;
+
+            /*
+            Possible return value:
+            {
+                name: 'name',
+                $: {jQuery object},
+                [type: 'type'],
+                [members: ['name1', 'name2', ...]],
+                [toggleControl: function],
+                [event: { onA: function, ... }]
+            }
+            */
 
             return obj;
+        },
+
+        createMoverCtrlObject = function (options) {
+            return {
+                name: options.name,
+                type: options.type,
+                members: $().ntTools.createMoverMember(options.name),
+                toggleControl: $().ntTools.toggleMoverControl
+            };
+        },
+
+        getRegisteredCtrls = function () {
+            return getRegisteredCtrls;
         }
-    }
+    ;
+
+    return {
+        registerCtrlObjects: registerCtrlObjects,
+        registerCtrlObject: registerCtrlObject,
+        createCtrlObjects: createCtrlObjects,
+        getRegisteredCtrls: getRegisteredCtrls
+    };
 };
 
 (function ($) {
@@ -867,4 +842,12 @@ var Factory = function () {
             registeredCtrl[registeredCtrl.length] = obj;
         }
     ;
+};
+
+var factory2 = function () {
+
+};
+
+var tpm = function () {
+
 };

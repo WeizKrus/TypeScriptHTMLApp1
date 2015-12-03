@@ -843,11 +843,3 @@ var Factory = function () {
         }
     ;
 };
-
-var factory2 = function () {
-
-};
-
-var tpm = function () {
-
-};

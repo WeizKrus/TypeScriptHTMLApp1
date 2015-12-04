@@ -22,8 +22,20 @@ class Horse extends Animal {
     }
 }
 
+class SecondHorse extends Horse {
+    constructor(name: string) {
+        super(name);
+    }
+
+    moveBy(meters = 45) {
+        super.move(meters);
+    }
+}
+
 var sam = new Snake("Sammy the Python");
 var tom: Animal = new Horse("Tommy the Palomino");
+var tomJr = new SecondHorse("Tommny Jr the Brown");
 
 sam.move();
 tom.move(34);
+tomJr.moveBy(35);
